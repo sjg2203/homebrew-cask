@@ -18,6 +18,7 @@ cask "miniforge" do
   end
 
   auto_updates true
+
   conflicts_with cask: [
     "mambaforge",
     "miniconda",
@@ -31,24 +32,25 @@ cask "miniforge" do
     args:       ["-b", "-p", install_root],
   }
 
-  uninstall delete: install_root
-
   binary "#{install_root}/condabin/conda"
   binary "#{install_root}/condabin/mamba"
 
-  uninstall_preflight do
-     if File.directory?("#{install_root}/envs")
-       FileUtils.mv("#{install_root}/envs", "#{HOMEBREW_PREFIX}/envs-backup")
-    end
-  end
-
   preflight do
-     if File.directory?("#{HOMEBREW_PREFIX}/envs-backup")
-      FileUtils.mv("#{HOMEBREW_PREFIX}/envs-backup", "#{install_root}/envs")
-    end
+    FileUtils.mv(
+      "#{HOMEBREW_PREFIX}/envs-backup",
+      "#{install_root}/envs",
+    ) if File.directory?("#{HOMEBREW_PREFIX}/envs-backup")
   end
 
-  uninstall rmdir: install_root
+  uninstall_preflight do
+    FileUtils.mv(
+      "#{install_root}/envs",
+      "#{HOMEBREW_PREFIX}/envs-backup",
+    ) if File.directory?("#{install_root}/envs")
+  end
+
+  uninstall delete: install_root
+  uninstall rmdir:  install_root
 
   zap trash: [
      "~/.conda",
